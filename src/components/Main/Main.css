@@ -189,3 +189,44 @@
   background: #f2f2f2;
   border-top-left-radius: 4px;
 }
+
+/* 📱 Fix input bar at bottom on mobile */
+@media (max-width: 768px) {
+  .main-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px 15px;
+    z-index: 1000;
+  }
+
+  .search-box {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .search-box input {
+    flex: 1;
+    font-size: 14px;
+    padding: 10px;
+  }
+
+  .chat-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 100%;
+}
+
+  .bottom-info {
+    display: none; /* hide small note on mobile */
+  }
+
+  /* scroll padding fix (to avoid input overlap) */
+  .main-container {
+    padding-bottom: 90px;
+  }
+}
