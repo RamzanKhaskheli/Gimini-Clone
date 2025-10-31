@@ -31,7 +31,7 @@ const Sidebar = ({ chatHistory, setChatHistory }) => {
               chatHistory.map((chat, index) => (
                 <div className="recent-entry" key={index}>
                   <img src={assets.message_icon} alt="" />
-                  <p>{chat.slice(0, 28)}...</p>
+                  <p>{chat.slice(0, 10)}...</p>
 
                   <img
                     src={assets.trash_icon}

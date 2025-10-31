@@ -117,6 +117,7 @@ const Main = ({ onNewChat }) => {
                   className="chat-icon"
                 />
                 <p className="chat-text">Thinking... 🤔</p>
+               
               </div>
             )}
           </div>
