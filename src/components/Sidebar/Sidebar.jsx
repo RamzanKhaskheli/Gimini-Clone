@@ -1,8 +1,15 @@
 import React, { useState } from "react";
 import "./Sidebar.css";
 import { assets } from "../../assets/assets";
-const Sidebar = () => {
+const Sidebar = ({ chatHistory, setChatHistory }) => {
   const [extended, setExtended] = useState(false);
+
+  const handleDeleteChat = (index) => {
+    const updatedChats = chatHistory.filter((_, i) => i !== index);
+    setChatHistory(updatedChats);
+    localStorage.setItem("chatHistory", JSON.stringify(updatedChats));
+  };
+
   return (
     <div className="sidebar">
       <div className="top">
@@ -19,10 +26,30 @@ const Sidebar = () => {
         {extended ? (
           <div className="recent">
             <p className="recent-title">Recent</p>
-            <div className="recent-entry">
-              <img src={assets.message_icon} alt="" />
-              <p>What is Reactjs...</p>
-            </div>
+
+            {chatHistory && chatHistory.length > 0 ? (
+              chatHistory.map((chat, index) => (
+                <div className="recent-entry" key={index}>
+                  <img src={assets.message_icon} alt="" />
+                  <p>{chat.slice(0, 28)}...</p>
+
+                  <img
+                    src={assets.trash_icon}
+                    alt="delete"
+                    onClick={() => handleDeleteChat(index)}
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      marginLeft: "auto",
+                      cursor: "pointer",
+                      opacity: "0.7",
+                    }}
+                  />
+                </div>
+              ))
+            ) : (
+              <p style={{ paddingLeft: "10px", opacity: 0.7 }}>No chats yet</p>
+            )}
           </div>
         ) : null}
       </div>
