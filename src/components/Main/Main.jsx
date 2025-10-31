@@ -20,26 +20,64 @@ const Main = ({ onNewChat }) => {
     onNewChat && onNewChat(input);
 
     const userMessage = { role: "user", text: input };
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage, { role: "bot", text: "" }]);
     setInput("");
     setLoading(true);
 
     try {
-      const result = await ai.models.generateContent({
+      const result = await ai.models.streamGenerateContent({
         model: "gemini-2.5-flash",
         contents: input,
       });
 
-      const text = result.text;
-      const botMessage = { role: "bot", text };
+      let fullText = "";
+
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
+        fullText += chunkText;
+
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1].text = fullText;
+          return updated;
+        });
+      }
+    } catch (error) {
+      console.error("Gemini API Error:", error);
+      const errorText = error.message?.includes("503")
+        ? "Gemini servers are busy, please try again later."
+        : "⚠️ Something went wrong. Please try again!";
+      setMessages((prev) => [...prev, { role: "bot", text: errorText }]);
+    }
+
+    setLoading(false);
+  };
+
+  const handleCardClick = async (question) => {
+    setLoading(true);
+    const userMessage = { role: "user", text: question };
+    setMessages((prev) => [...prev, userMessage]);
+
+    try {
+      const result = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: question,
+      });
+
+      const botMessage = { role: "bot", text: result.text };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
       console.error("Gemini API Error:", error);
-      const botMessage = {
-        role: "bot",
-        text: "⚠️ Something went wrong. Please try again!",
-      };
-      setMessages((prev) => [...prev, botMessage]);
+      const errorText = error.message?.includes("503")
+        ? "Gemini servers is busy, try again"
+        : "⚠️ Something went wrong. Please try again!";
+
+      setMessages((prev) => [...prev, { role: "bot", text: errorText }]);
+
+      // Retry after delay if overloaded
+      if (error.message?.includes("503")) {
+        setTimeout(() => handleCardClick(question), 2000);
+      }
     }
 
     setLoading(false);
@@ -65,21 +103,51 @@ const Main = ({ onNewChat }) => {
         )}
 
         {/* Cards – only when no chat */}
+        {/* Suggestion cards */}
         {messages.length === 0 && (
           <div className="cards">
-            <div className="card">
+            <div
+              className="card"
+              onClick={() =>
+                handleCardClick(
+                  "Suggest beautiful places to see on an upcoming road trip"
+                )
+              }
+            >
               <p>Suggest beautiful places to see on an upcoming road trip</p>
               <img src={assets.compass_icon} alt="" />
             </div>
-            <div className="card">
+
+            <div
+              className="card"
+              onClick={() =>
+                handleCardClick(
+                  "Briefly summarize this concept: urban planning"
+                )
+              }
+            >
               <p>Briefly summarize this concept: urban planning</p>
               <img src={assets.bulb_icon} alt="" />
             </div>
-            <div className="card">
+
+            <div
+              className="card"
+              onClick={() =>
+                handleCardClick(
+                  "Brainstorm team bonding activities for our work retreat"
+                )
+              }
+            >
               <p>Brainstorm team bonding activities for our work retreat</p>
               <img src={assets.message_icon} alt="" />
             </div>
-            <div className="card">
+
+            <div
+              className="card"
+              onClick={() =>
+                handleCardClick("Improve the readability of the following code")
+              }
+            >
               <p>Improve the readability of the following code</p>
               <img src={assets.code_icon} alt="" />
             </div>
@@ -117,7 +185,6 @@ const Main = ({ onNewChat }) => {
                   className="chat-icon"
                 />
                 <p className="chat-text">Thinking... 🤔</p>
-               
               </div>
             )}
           </div>
