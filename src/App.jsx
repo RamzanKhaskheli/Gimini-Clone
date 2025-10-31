@@ -9,12 +9,12 @@ function App() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  // ✅ Step 2: Save every update to LocalStorage
+  // Save every update to LocalStorage
   useEffect(() => {
     localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
   }, [chatHistory]);
 
-  // ✅ Step 3: Callback for new chat (from Main.jsx)
+  // Callback for new chat (from Main.jsx)
   const handleNewChat = (prompt) => {
     setChatHistory((prev) => [prompt, ...prev]);
   };

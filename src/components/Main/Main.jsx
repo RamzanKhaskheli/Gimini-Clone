@@ -1,12 +1,9 @@
 import React, { useState } from "react";
 import { assets } from "../../assets/assets";
 import "./Main.css";
-import { GoogleGenAI } from "@google/genai"; // ✅ latest Gemini SDK
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Initialize Gemini API client
-const ai = new GoogleGenAI({
-  apiKey: import.meta.env.VITE_GEMINI_API_KEY,
-});
+const ai = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 const Main = ({ onNewChat }) => {
   const [input, setInput] = useState("");
@@ -20,34 +17,26 @@ const Main = ({ onNewChat }) => {
     onNewChat && onNewChat(input);
 
     const userMessage = { role: "user", text: input };
-    setMessages((prev) => [...prev, userMessage, { role: "bot", text: "" }]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setLoading(true);
 
     try {
-      const result = await ai.models.streamGenerateContent({
-        model: "gemini-2.5-flash",
-        contents: input,
+      const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: input }] }],
       });
 
-      let fullText = "";
-
-      for await (const chunk of result.stream) {
-        const chunkText = chunk.text();
-        fullText += chunkText;
-
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1].text = fullText;
-          return updated;
-        });
-      }
+      const text = result.response.text();
+      const botMessage = { role: "bot", text };
+      setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
       console.error("Gemini API Error:", error);
-      const errorText = error.message?.includes("503")
-        ? "Gemini servers are busy, please try again later."
-        : "⚠️ Something went wrong. Please try again!";
-      setMessages((prev) => [...prev, { role: "bot", text: errorText }]);
+      const botMessage = {
+        role: "bot",
+        text: "⚠️ Something went wrong. Please try again!",
+      };
+      setMessages((prev) => [...prev, botMessage]);
     }
 
     setLoading(false);
